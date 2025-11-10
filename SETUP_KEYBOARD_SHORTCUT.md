@@ -63,7 +63,7 @@ For the shortcut to work in all apps (including WhatsApp):
 
 ---
 
-## Option 2: Automator Quick Action (macOS Catalina/Big Sur)
+## Option 2: Automator Quick Action (RECOMMENDED for WhatsApp/Electron apps)
 
 ### Step 1: Open Automator
 
