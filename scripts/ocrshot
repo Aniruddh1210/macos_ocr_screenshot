@@ -10,6 +10,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Log file for debugging Shortcuts issues
+LOG_FILE="/tmp/ocrshot_debug.log"
+# Try to log, but don't fail if we can't write
+{
+  echo "=== OCR Screenshot Run: $(date) ===" >&2
+  echo "SCRIPT_DIR: $SCRIPT_DIR" >&2
+  echo "ROOT_DIR: $ROOT_DIR" >&2
+  echo "PWD: $(pwd)" >&2
+  echo "USER: ${USER:-unknown}" >&2
+  echo "SHELL: ${SHELL:-unknown}" >&2
+  echo "Arguments: $*" >&2
+} >> "$LOG_FILE" 2>/dev/null || true
+
 ENGINE="auto"   # auto | vision | tesseract
 OPEN_UI=1        # 1=open TextEdit with result, 0=no
 KEEP_IMG=0       # 1=keep image, 0=remove
@@ -60,13 +73,20 @@ else
     echo "screencapture command not found (macOS required)." >&2
     exit 1
   fi
-  # Don't print anything when running from Shortcuts - it confuses the parser
-  screencapture -i -x "$IMG_PATH" 2>/dev/null
+  {
+    echo "Starting screencapture to: $IMG_PATH" >&2
+    screencapture -i -x "$IMG_PATH" 2>&1
+  } >> "$LOG_FILE" 2>/dev/null || true
 
   if [ ! -s "$IMG_PATH" ]; then
+    {
+      echo "Screenshot file empty or not created" >&2
+      ls -la "$IMG_PATH" 2>&1 || echo "File does not exist" >&2
+    } >> "$LOG_FILE" 2>/dev/null || true
     # Silent exit when cancelled
     exit 1
   fi
+  { echo "Screenshot captured successfully: $(ls -lh "$IMG_PATH")" >&2; } >> "$LOG_FILE" 2>/dev/null || true
 fi
 
 run_vision() {
@@ -92,35 +112,51 @@ run_tesseract() {
 }
 
 OCR_TEXT=""
+{ echo "Running OCR with engine: $ENGINE" >&2; } >> "$LOG_FILE" 2>/dev/null || true
 case "$ENGINE" in
   vision)
+    { echo "Attempting Vision OCR..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
     OCR_TEXT=$(run_vision || true)
+    { echo "Vision OCR result length: ${#OCR_TEXT}" >&2; } >> "$LOG_FILE" 2>/dev/null || true
     ;;
   tesseract)
+    { echo "Attempting Tesseract OCR..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
     OCR_TEXT=$(run_tesseract || true)
+    { echo "Tesseract OCR result length: ${#OCR_TEXT}" >&2; } >> "$LOG_FILE" 2>/dev/null || true
     ;;
   auto)
+    { echo "Attempting Vision OCR first..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
     OCR_TEXT=$(run_vision || true)
+    { echo "Vision OCR result length: ${#OCR_TEXT}" >&2; } >> "$LOG_FILE" 2>/dev/null || true
     if [ -z "$OCR_TEXT" ]; then
+      { echo "Vision failed, trying Tesseract..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
       OCR_TEXT=$(run_tesseract || true)
+      { echo "Tesseract OCR result length: ${#OCR_TEXT}" >&2; } >> "$LOG_FILE" 2>/dev/null || true
     fi
     ;;
   *) echo "Invalid engine: $ENGINE" >&2; exit 1;;
 esac
 
 if [ -z "$OCR_TEXT" ]; then
+  { echo "No text detected by OCR" >&2; } >> "$LOG_FILE" 2>/dev/null || true
   printf "" | pbcopy
 else
+  { echo "OCR detected ${#OCR_TEXT} characters" >&2; } >> "$LOG_FILE" 2>/dev/null || true
   printf "%s" "$OCR_TEXT" | pbcopy
+  { echo "Text copied to clipboard" >&2; } >> "$LOG_FILE" 2>/dev/null || true
 fi
 
 printf "%s" "$OCR_TEXT" > "$TXT_PATH"
+{ echo "Text saved to: $TXT_PATH" >&2; } >> "$LOG_FILE" 2>/dev/null || true
 
 if [ "$OPEN_UI" = "1" ]; then
+  { echo "Opening TextEdit..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
   open -a TextEdit "$TXT_PATH"
 fi
 
+{ echo "Showing notification..." >&2; } >> "$LOG_FILE" 2>/dev/null || true
 osascript -e 'display notification "OCR complete — text copied to clipboard" with title "OCR Screenshot"' 2>/dev/null || true
+{ echo "Script completed successfully" >&2; } >> "$LOG_FILE" 2>/dev/null || true
 
 if [ "$KEEP_IMG" != "1" ] && [ -z "$INPUT_IMAGE" ]; then
   rm -f "$IMG_PATH"

@@ -22,10 +22,14 @@ This guide will help you bind **Command+Shift+3** to instantly trigger OCR on an
 1. Set **Shell** to: `/bin/zsh`
 2. Set **Pass input** to: `as arguments` (or leave default)
 3. In the script text box, paste:
+
    ```bash
-   /Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot
+   open -a /Users/aniruddh/projects/screenshotwithocr/OCRScreenshot.app
    ```
+
    _(Replace `/Users/aniruddh` with your actual home directory if different)_
+
+   **Note:** We use the native app instead of the shell script because Shortcuts runs in the background without GUI access, which prevents `screencapture -i` from showing the selection UI.
 
 ### Step 4: Name and Save
 
@@ -76,9 +80,12 @@ This guide will help you bind **Command+Shift+3** to instantly trigger OCR on an
 1. Set **Shell** to: `/bin/zsh`
 2. Set **Pass input** to: `as arguments`
 3. Paste this in the script box:
+
    ```bash
-   /Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot
+   open -a /Users/aniruddh/projects/screenshotwithocr/OCRScreenshot.app
    ```
+
+   **Note:** We use the native app instead of the shell script because Automator runs in the background without GUI access, which prevents `screencapture -i` from showing the selection UI.
 
 ### Step 5: Save
 
