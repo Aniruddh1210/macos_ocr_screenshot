@@ -1,6 +1,8 @@
-# Setting Up Cmd+Shift+3 for OCR Screenshot
+# Setting Up Keyboard Shortcut for OCR Screenshot
 
-This guide will help you bind **Command+Shift+3** to instantly trigger OCR on any selected screen region.
+This guide will help you bind a keyboard shortcut (recommended: **Command+Shift+2** or **Control+Option+Command+3**) to instantly trigger OCR on any selected screen region.
+
+**Note:** Command+Shift+3 is reserved by macOS for screenshots and cannot be reassigned in Shortcuts app on some macOS versions. Use Command+Shift+2 or another combo instead.
 
 ---
 
@@ -24,12 +26,12 @@ This guide will help you bind **Command+Shift+3** to instantly trigger OCR on an
 3. In the script text box, paste:
 
    ```bash
-   open -a /Users/aniruddh/projects/screenshotwithocr/OCRScreenshot.app
+   /Users/aniruddh/projects/screenshotwithocr/run_ocr_shortcut.sh
    ```
 
    _(Replace `/Users/aniruddh` with your actual home directory if different)_
 
-   **Note:** We use the native app instead of the shell script because Shortcuts runs in the background without GUI access, which prevents `screencapture -i` from showing the selection UI.
+   **Important:** This wrapper script uses AppleScript to run screencapture with proper GUI permissions.
 
 ### Step 4: Name and Save
 
@@ -41,18 +43,23 @@ This guide will help you bind **Command+Shift+3** to instantly trigger OCR on an
 
 1. Right-click your new shortcut in the sidebar
 2. Select **"Add Keyboard Shortcut"** or click the **(i)** icon → **Keyboard Shortcut**
-3. Press **Command+Shift+3**
-4. If macOS warns about conflicts, proceed to Step 6
+3. Press **Command+Shift+2** (or another key combo like Control+Option+Command+3)
+   - **Don't use Cmd+Shift+3** - macOS reserves it for screenshots and won't let you reassign it in Shortcuts
+4. If macOS warns about conflicts, try a different combo
 
-### Step 6: Disable Default Screenshot Shortcut (if needed)
+### Step 6: Enable Required Permissions
 
-1. Open **System Settings** (or System Preferences)
-2. Go to **Keyboard** → **Keyboard Shortcuts**
-3. Select **Screenshots** in the left sidebar
-4. Find **"Save picture of screen as a file"** (usually Cmd+Shift+3)
-5. **Uncheck** it or change it to a different key combo
-6. Close System Settings
-7. Return to Shortcuts and reassign **Command+Shift+3** to your OCR shortcut
+For the shortcut to work in all apps (including WhatsApp):
+
+1. Open **System Settings** → **Privacy & Security**
+2. Go to **Automation**:
+   - Enable **Shortcuts** → **System Events**
+3. Go to **Accessibility**:
+   - Add and enable **Shortcuts**
+4. Go to **Screen Recording**:
+   - Add and enable **Shortcuts** (this allows it to trigger screencapture)
+
+**Important:** After enabling these permissions, quit and reopen any apps (like WhatsApp) for the shortcut to work in them.
 
 ---
 
@@ -82,10 +89,10 @@ This guide will help you bind **Command+Shift+3** to instantly trigger OCR on an
 3. Paste this in the script box:
 
    ```bash
-   open -a /Users/aniruddh/projects/screenshotwithocr/OCRScreenshot.app
+   /Users/aniruddh/projects/screenshotwithocr/run_ocr_shortcut.sh
    ```
 
-   **Note:** We use the native app instead of the shell script because Automator runs in the background without GUI access, which prevents `screencapture -i` from showing the selection UI.
+   **Important:** This wrapper script uses AppleScript to run screencapture with proper GUI permissions.
 
 ### Step 5: Save
 
@@ -135,9 +142,17 @@ ocrshot
 
 ### Shortcut doesn't trigger
 
-- Make sure you've **disabled or reassigned** the default macOS screenshot shortcut
-- Try a different key combo like **Control+Option+Command+3** if conflicts persist
-- Restart your Mac after changing System Settings
+- **Can't use Cmd+Shift+3?** macOS reserves it for screenshots. Use **Cmd+Shift+2** or **Ctrl+Opt+Cmd+3** instead
+- Check permissions (see Step 6 above): Shortcuts needs Automation, Accessibility, and Screen Recording access
+- Restart your Mac after changing permissions
+
+### Shortcut doesn't work in specific apps (WhatsApp, Slack, etc.)
+
+1. Go to **System Settings** → **Privacy & Security** → **Screen Recording**
+2. Make sure **Shortcuts** is enabled
+3. **Quit and reopen** the problematic app (WhatsApp, etc.)
+4. If still not working, add **System Events** to Screen Recording permissions as well
+5. Some apps may override keyboard shortcuts - try a different key combo
 
 ### "Permission denied" or "Command not found"
 
