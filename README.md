@@ -94,6 +94,7 @@ Keyboard shortcut setup (Command+Shift+3)
 **See [SETUP_KEYBOARD_SHORTCUT.md](SETUP_KEYBOARD_SHORTCUT.md) for complete step-by-step instructions.**
 
 Quick summary:
+
 1. Open **Shortcuts** app (macOS 12+) or **Automator** (older macOS)
 2. Create a new shortcut that runs: `/Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot`
 3. Assign keyboard shortcut **Command+Shift+3**

@@ -60,11 +60,11 @@ else
     echo "screencapture command not found (macOS required)." >&2
     exit 1
   fi
-  echo "Select area to screenshot..."
-  screencapture -i -x "$IMG_PATH"
+  # Don't print anything when running from Shortcuts - it confuses the parser
+  screencapture -i -x "$IMG_PATH" 2>/dev/null
 
   if [ ! -s "$IMG_PATH" ]; then
-    echo "No screenshot taken or file empty; exiting." >&2
+    # Silent exit when cancelled
     exit 1
   fi
 fi
@@ -79,7 +79,6 @@ run_vision() {
     # Run via swift interpreter if binary not built yet
     ocr_text=$(swift "$SRC" "$IMG_PATH" 2>/dev/null || true)
   else
-    echo "Vision OCR not available (missing $BIN and $SRC)" >&2
     return 2
   fi
   printf "%s" "$ocr_text"
@@ -87,7 +86,6 @@ run_vision() {
 
 run_tesseract() {
   if ! command -v tesseract >/dev/null 2>&1; then
-    echo "tesseract not found (brew install tesseract)" >&2
     return 2
   fi
   tesseract "$IMG_PATH" stdout -l "$TESS_LANG" 2>/dev/null || true
@@ -111,7 +109,6 @@ case "$ENGINE" in
 esac
 
 if [ -z "$OCR_TEXT" ]; then
-  echo "No OCR text detected." >&2
   printf "" | pbcopy
 else
   printf "%s" "$OCR_TEXT" | pbcopy
@@ -123,13 +120,14 @@ if [ "$OPEN_UI" = "1" ]; then
   open -a TextEdit "$TXT_PATH"
 fi
 
-osascript -e 'display notification "OCR complete — text copied to clipboard" with title "OCR Screenshot"' || true
+osascript -e 'display notification "OCR complete — text copied to clipboard" with title "OCR Screenshot"' 2>/dev/null || true
 
 if [ "$KEEP_IMG" != "1" ] && [ -z "$INPUT_IMAGE" ]; then
   rm -f "$IMG_PATH"
 fi
 
-echo "Text: $TXT_PATH"
-if [ "$KEEP_IMG" = "1" ]; then echo "Image: $IMG_PATH"; fi
+# Print to stderr so Shortcuts doesn't try to parse it
+echo "Text: $TXT_PATH" >&2
+if [ "$KEEP_IMG" = "1" ]; then echo "Image: $IMG_PATH" >&2; fi
 
 exit 0

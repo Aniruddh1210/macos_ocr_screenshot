@@ -14,7 +14,7 @@ echo "Generating sample image at $TMP_IMG" >&2
 swift "$SAMPLE_GEN" "$TMP_IMG" "Unified OCR test 456" >/dev/null
 
 echo "Running unified ocrshot (vision engine) ..." >&2
-OUT="$($OCRSHOT --engine vision --no-open --input "$TMP_IMG" 2>/dev/null)"
+OUT="$($OCRSHOT --engine vision --no-open --input "$TMP_IMG" 2>&1)"
 
 TXT_FILE=$(echo "$OUT" | awk '/^Text: /{print $2}')
 if [ -z "${TXT_FILE:-}" ] || [ ! -f "$TXT_FILE" ]; then
