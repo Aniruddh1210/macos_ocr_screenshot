@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# Unified OCR screenshot tool for macOS
+# - Interactive selection via screencapture
+# - OCR via Vision (default) or Tesseract
+# - Copies text to clipboard and opens in TextEdit
+
+set -euo pipefail
+
+# Determine project root relative to this script (scripts/ directory one level down)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+ENGINE="auto"   # auto | vision | tesseract
+OPEN_UI=1        # 1=open TextEdit with result, 0=no
+KEEP_IMG=0       # 1=keep image, 0=remove
+TESS_LANG=${TESS_LANG:-eng}
+INPUT_IMAGE=""   # if set, use this image instead of capturing
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+Options:
+  -e, --engine {auto|vision|tesseract}  OCR engine to use (default: auto)
+  -l, --lang <code>                     Tesseract language code (default: eng)
+  -i, --input <image-path>              Use an existing image instead of taking a screenshot
+  -n, --no-open                         Do not open TextEdit with the result
+  -k, --keep                            Keep the captured image (in /tmp)
+  -h, --help                            Show this help
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -e|--engine) ENGINE="$2"; shift 2;;
+    -l|--lang) TESS_LANG="$2"; shift 2;;
+    -i|--input) INPUT_IMAGE="$2"; shift 2;;
+    -n|--no-open) OPEN_UI=0; shift;;
+    -k|--keep) KEEP_IMG=1; shift;;
+    -h|--help) usage; exit 0;;
+    *) echo "Unknown option: $1" >&2; usage; exit 1;;
+  esac
+done
+
+TMPDIR="/tmp"
+IMG_BASE=$(mktemp "$TMPDIR/ocrshot.unified.XXXXXX")
+IMG_PATH="${IMG_BASE}.png"
+TXT_BASE=$(mktemp "$TMPDIR/ocrtext.unified.XXXXXX")
+TXT_PATH="${TXT_BASE}.txt"
+
+if [ -n "$INPUT_IMAGE" ]; then
+  if [ ! -f "$INPUT_IMAGE" ]; then
+    echo "Input image not found: $INPUT_IMAGE" >&2
+    exit 1
+  fi
+  # Use the provided image directly
+  IMG_PATH="$INPUT_IMAGE"
+  KEEP_IMG=1  # never delete user's input image
+else
+  if ! command -v screencapture >/dev/null 2>&1; then
+    echo "screencapture command not found (macOS required)." >&2
+    exit 1
+  fi
+  echo "Select area to screenshot..."
+  screencapture -i -x "$IMG_PATH"
+
+  if [ ! -s "$IMG_PATH" ]; then
+    echo "No screenshot taken or file empty; exiting." >&2
+    exit 1
+  fi
+fi
+
+run_vision() {
+  local ocr_text=""
+  local BIN="${ROOT_DIR}/tools/vision_ocr/vision_ocr"
+  local SRC="${ROOT_DIR}/tools/vision_ocr/main.swift"
+  if [ -x "$BIN" ]; then
+    ocr_text=$("$BIN" "$IMG_PATH" 2>/dev/null || true)
+  elif [ -f "$SRC" ]; then
+    # Run via swift interpreter if binary not built yet
+    ocr_text=$(swift "$SRC" "$IMG_PATH" 2>/dev/null || true)
+  else
+    echo "Vision OCR not available (missing $BIN and $SRC)" >&2
+    return 2
+  fi
+  printf "%s" "$ocr_text"
+}
+
+run_tesseract() {
+  if ! command -v tesseract >/dev/null 2>&1; then
+    echo "tesseract not found (brew install tesseract)" >&2
+    return 2
+  fi
+  tesseract "$IMG_PATH" stdout -l "$TESS_LANG" 2>/dev/null || true
+}
+
+OCR_TEXT=""
+case "$ENGINE" in
+  vision)
+    OCR_TEXT=$(run_vision || true)
+    ;;
+  tesseract)
+    OCR_TEXT=$(run_tesseract || true)
+    ;;
+  auto)
+    OCR_TEXT=$(run_vision || true)
+    if [ -z "$OCR_TEXT" ]; then
+      OCR_TEXT=$(run_tesseract || true)
+    fi
+    ;;
+  *) echo "Invalid engine: $ENGINE" >&2; exit 1;;
+esac
+
+if [ -z "$OCR_TEXT" ]; then
+  echo "No OCR text detected." >&2
+  printf "" | pbcopy
+else
+  printf "%s" "$OCR_TEXT" | pbcopy
+fi
+
+printf "%s" "$OCR_TEXT" > "$TXT_PATH"
+
+if [ "$OPEN_UI" = "1" ]; then
+  open -a TextEdit "$TXT_PATH"
+fi
+
+osascript -e 'display notification "OCR complete — text copied to clipboard" with title "OCR Screenshot"' || true
+
+if [ "$KEEP_IMG" != "1" ] && [ -z "$INPUT_IMAGE" ]; then
+  rm -f "$IMG_PATH"
+fi
+
+echo "Text: $TXT_PATH"
+if [ "$KEEP_IMG" = "1" ]; then echo "Image: $IMG_PATH"; fi
+
+exit 0

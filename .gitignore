@@ -1,0 +1,29 @@
+# Build artifacts
+bin/
+*.o
+*.a
+*.dylib
+*.dSYM
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Temporary OCR files (just in case they end up in repo)
+/tmp/
+*.tmp
+
+# Xcode / Swift
+*.xcodeproj
+*.xcworkspace
+.build/
+DerivedData/
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
