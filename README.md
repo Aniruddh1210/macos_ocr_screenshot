@@ -96,7 +96,7 @@ Keyboard shortcut setup (Command+Shift+3)
 Quick summary:
 
 1. Open **Shortcuts** app (macOS 12+) or **Automator** (older macOS)
-2. Create a new shortcut that runs: `/Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot`
+2. Create a new shortcut that runs: `/path/to/screenshotwithocr/scripts/ocrshot` (replace with your actual path)
 3. Assign keyboard shortcut **Command+Shift+3**
 4. Disable the default macOS screenshot shortcut if it conflicts (System Settings → Keyboard → Shortcuts → Screenshots)
 

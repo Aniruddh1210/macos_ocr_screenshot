@@ -26,10 +26,10 @@ This guide will help you bind a keyboard shortcut (recommended: **Command+Shift+
 3. In the script text box, paste:
 
    ```bash
-   /Users/aniruddh/projects/screenshotwithocr/run_ocr_shortcut.sh
+   /path/to/screenshotwithocr/run_ocr_shortcut.sh
    ```
 
-   _(Replace `/Users/aniruddh` with your actual home directory if different)_
+   _(Replace `/path/to` with your actual installation directory)_
 
    **Important:** This wrapper script uses AppleScript to run screencapture with proper GUI permissions.
 
@@ -89,7 +89,7 @@ For the shortcut to work in all apps (including WhatsApp):
 3. Paste this in the script box:
 
    ```bash
-   /Users/aniruddh/projects/screenshotwithocr/run_ocr_shortcut.sh
+   /path/to/screenshotwithocr/run_ocr_shortcut.sh
    ```
 
    **Important:** This wrapper script uses AppleScript to run screencapture with proper GUI permissions.
@@ -115,8 +115,10 @@ For the shortcut to work in all apps (including WhatsApp):
 
 If you prefer to keep the absolute path flexible, create a symlink:
 
+If you want to run `ocrshot` from anywhere in the terminal, create a symlink:
+
 ```bash
-sudo ln -sf /Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot /usr/local/bin/ocrshot
+sudo ln -sf /path/to/screenshotwithocr/scripts/ocrshot /usr/local/bin/ocrshot
 ```
 
 Then in your Shortcut/Automator script, just use:
@@ -158,11 +160,11 @@ ocrshot
 
 - Ensure the script is executable:
   ```bash
-  chmod +x /Users/aniruddh/projects/screenshotwithocr/scripts/ocrshot
+  chmod +x /path/to/screenshotwithocr/scripts/ocrshot
   ```
 - Rebuild binaries:
   ```bash
-  cd /Users/aniruddh/projects/screenshotwithocr
+  cd /path/to/screenshotwithocr
   ./build.sh
   ```
 
