@@ -7,6 +7,12 @@ VISION_SRC=$(ROOT_DIR)/tools/vision_ocr/main.swift
 VISION_BIN=$(BIN_DIR)/vision_ocr
 APP_SRC=$(ROOT_DIR)/OCRScreenshot/OCRScreenshot.swift
 APP_BIN=$(ROOT_DIR)/OCRScreenshot/OCRScreenshot
+LENS_SRC=$(ROOT_DIR)/OCRSelect/OCRSelect.swift
+LENS_BIN=$(ROOT_DIR)/OCRSelect/OCRSelect
+LENS_APP=$(ROOT_DIR)/OCRSelect2.app
+LENS_APP_BIN=$(LENS_APP)/Contents/MacOS/TextGrabber
+LENS_INFO=$(LENS_APP)/Contents/Info.plist
+LENS_INFO_TEMPLATE=$(ROOT_DIR)/mac/TextGrabber.Info.plist
 
 .PHONY: all build vision app install test test-all clean help
 
@@ -32,6 +38,22 @@ app: $(APP_SRC)
 	@echo "Built $(APP_BIN)"
 
 build: vision app
+ 
+lens: $(LENS_SRC)
+	$(SWIFTC) -parse-as-library -O -o $(LENS_BIN) $(LENS_SRC) -framework Cocoa -framework Vision -framework SwiftUI
+	@echo "Built $(LENS_BIN)"
+
+.PHONY: lens-bundle
+lens-bundle: lens $(LENS_INFO)
+	mkdir -p $(dir $(LENS_APP_BIN))
+	cp $(LENS_BIN) $(LENS_APP_BIN)
+	chmod +x $(LENS_APP_BIN)
+	@echo "Bundled $(LENS_APP_BIN)"
+
+$(LENS_INFO):
+	mkdir -p $(dir $(LENS_INFO))
+	@echo "Copying $(LENS_INFO_TEMPLATE) -> $(LENS_INFO)"
+	cp $(LENS_INFO_TEMPLATE) $(LENS_INFO)
 
 test: build
 	./scripts/test_ocr.sh
